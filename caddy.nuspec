@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Do not remove this test for UTF-8: if “Ω” doesn’t appear as greek uppercase omega letter enclosed in quotation marks, you should use an editor that supports UTF-8, not this one. -->
+<package xmlns="http://schemas.microsoft.com/packaging/2015/06/nuspec.xsd">
+  <metadata>
+    <!-- Read this before publishing packages to chocolatey.org: https://github.com/chocolatey/chocolatey/wiki/CreatePackages -->
+    <id>caddy</id>
+    <title>Caddy</title>
+    <version>0.8.2</version>
+    <authors>Matt Holt</authors>
+    <owners>Joshua Poehls</owners>
+    <!-- <summary>summary</summary> -->
+    <description>
+Caddy is a lightweight, general-purpose web server for Windows, Mac, Linux, BSD and Android. It is a capable alternative to other popular and easy to use web servers. ([@caddyserver](https://twitter.com/caddyserver) on Twitter)
+
+The most notable features are HTTP/2, [Let's Encrypt](https://letsencrypt.org/) support, Virtual Hosts, TLS + SNI, and easy configuration with a [Caddyfile](https://caddyserver.com/docs/caddyfile). In development, you usually put one Caddyfile with each site. In production, Caddy serves HTTPS by default and manages all cryptographic assets for you.
+
+[User Guide](https://caddyserver.com/docs)
+    </description>
+    <projectUrl>https://caddyserver.com/</projectUrl>
+    <packageSourceUrl>https://github.com/jpoehls/caddy-chocolatey</packageSourceUrl>
+    <licenseUrl>https://github.com/mholt/caddy/blob/master/LICENSE.txt</licenseUrl>
+    <!--
+    <packageSourceUrl></packageSourceUrl>
+    <projectSourceUrl></projectSourceUrl>
+    <docsUrl></docsUrl>
+    <mailingListUrl></mailingListUrl>
+    <bugTrackerUrl></bugTrackerUrl>
+	<licenseUrl></licenseUrl>-->
+    <tags>caddy web server</tags>
+    <copyright></copyright>
+    
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <!--<iconUrl>http://cdn.rawgit.com/__REPLACE_YOUR_REPO__/master/icons/choco-arcanist.png</iconUrl>-->
+    <!--<dependencies>
+      <dependency id="" version="__VERSION__" />
+      <dependency id="" />
+    </dependencies>-->
+    <!-- <releaseNotes>__REPLACE_OR_REMOVE__MarkDown_Okay</releaseNotes> -->
+    <!--<provides></provides>-->
+  </metadata>
+  <files>
+    <file src="tools\**" target="tools" />
+  </files>
+</package>
