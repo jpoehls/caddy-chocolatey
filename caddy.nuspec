@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <!-- Do not remove this test for UTF-8: if “Ω” doesn’t appear as greek uppercase omega letter enclosed in quotation marks, you should use an editor that supports UTF-8, not this one. -->
 <package xmlns="http://schemas.microsoft.com/packaging/2015/06/nuspec.xsd">
   <metadata>
@@ -9,23 +9,20 @@
     <authors>Matt Holt</authors>
     <owners>Joshua Poehls</owners>
     <!-- <summary>summary</summary> -->
-    <description>
-Caddy is a lightweight, general-purpose web server for Windows, Mac, Linux, BSD and Android. It is a capable alternative to other popular and easy to use web servers. ([@caddyserver](https://twitter.com/caddyserver) on Twitter)
+    <description>Caddy is a lightweight, general-purpose web server for Windows, Mac, Linux, BSD and Android. It is a capable alternative to other popular and easy to use web servers. ([@caddyserver](https://twitter.com/caddyserver) on Twitter)
 
 The most notable features are HTTP/2, [Let's Encrypt](https://letsencrypt.org/) support, Virtual Hosts, TLS + SNI, and easy configuration with a [Caddyfile](https://caddyserver.com/docs/caddyfile). In development, you usually put one Caddyfile with each site. In production, Caddy serves HTTPS by default and manages all cryptographic assets for you.
 
-[User Guide](https://caddyserver.com/docs)
-    </description>
+[User Guide](https://caddyserver.com/docs)</description>
     <projectUrl>https://caddyserver.com/</projectUrl>
+    <projectSourceUrl>https://github.com/mholt/caddy</projectSourceUrl>
     <packageSourceUrl>https://github.com/jpoehls/caddy-chocolatey</packageSourceUrl>
     <licenseUrl>https://github.com/mholt/caddy/blob/master/LICENSE.txt</licenseUrl>
+    <docsUrl>https://caddyserver.com/docs</docsUrl>
     <!--
-    <packageSourceUrl></packageSourceUrl>
-    <projectSourceUrl></projectSourceUrl>
-    <docsUrl></docsUrl>
     <mailingListUrl></mailingListUrl>
     <bugTrackerUrl></bugTrackerUrl>
-	<licenseUrl></licenseUrl>-->
+    -->
     <tags>caddy web server</tags>
     <copyright></copyright>
     
@@ -35,8 +32,36 @@ The most notable features are HTTP/2, [Let's Encrypt](https://letsencrypt.org/) 
       <dependency id="" version="__VERSION__" />
       <dependency id="" />
     </dependencies>-->
-    <!-- <releaseNotes>__REPLACE_OR_REMOVE__MarkDown_Okay</releaseNotes> -->
     <!--<provides></provides>-->
+    <releaseNotes>With 0.8.2, Caddy gets On-Demand TLS, which means it can obtain certificates during TLS handshakes; it does not need to know all the names when you start the server. Caddy is now built on Go 1.6, meaning faster crypto and highly-optimized garbage collection. Caddy no longer restarts on its own; only if signaled with USR1 (all certificate maintenance is done in-process now). We've also added support for SHA384 cipher suites and the ability to load certificates in bulk from a folder.
+
+On-Demand TLS is currently under tight rate limits to mitigate abuse. When you enable it, you have to set a hard limit of how many certificates it is allowed to issue using the `max_certs` property of the `tls` directive.
+
+- At most one certificate challenge happens at a time.
+- After 10 certificates are successfully obtained, new certificate challenges will not happen until 10 minutes after the last successful challenge.
+- A name that fails a challenge will not be allowed to be attempted again for 5 minutes.
+
+This feature -- as well as all automatic HTTPS, even at startup -- is not guaranteed to be supported in the future if ACME CAs are not able to issue certificates in a reasonable timeframe (quicker than 10 minutes). Please speak with your CA if this is of interest to you.
+
+See the [relevant](https://caddyserver.com/docs/automatic-https#on-demand) [documentation](https://caddyserver.com/docs/tls) and [release announcement](https://caddyserver.com/blog/caddy-0_8_2-released) for more details.
+
+All notable changes:
+
+- On-demand TLS can obtain certificates during handshakes
+- Built with Go 1.6
+- Process log (-log) is rotated when it gets large
+- Managed certificates get renewed 30 days early instead of just 14
+- fastcgi: Allow scheme prefix before address
+- markdown: Support for definition lists
+- proxy: Allow proxy to insecure HTTPS backends
+- proxy: Support proxy to unix socket
+- rewrite: Status code can be 2xx or 4xx
+- templates: New .Markdown action to interpret included file as Markdown
+- templates: .Truncate now truncates from end of string when length is negative
+- tls: Set hard limit for certificates obtained with on-demand TLS
+- tls: Load certificates from directory
+- tls: Add SHA384 cipher suites
+- Multiple bug fixes and internal changes</releaseNotes>
   </metadata>
   <files>
     <file src="tools\**" target="tools" />
