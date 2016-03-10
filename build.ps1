@@ -4,7 +4,7 @@ $releaseNotes = $latest.body.Trim()
 
 Write-Output "Latest Caddy version: $version"
 
-$nuspecFile = Join-Path $PSScriptRoot 'caddy.nuspec'
+$nuspecFile = Join-Path (Split-Path $PSCommandPath) 'caddy.nuspec'
 
 $ns = @{ nuspec = 'http://schemas.microsoft.com/packaging/2015/06/nuspec.xsd' }
 $versionEl = Select-Xml -LiteralPath $nuspecFile -XPath '/nuspec:package/nuspec:metadata/nuspec:version' -Namespace $ns
