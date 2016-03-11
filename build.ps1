@@ -27,11 +27,13 @@ function Get-Caddy {
 
     $features = [string]::Join(",", @("cors"; "git"; "hugo"; "ipfilter"; "jsonp"; "mailout"; "search"))
     $url = "https://caddyserver.com/download/build?os=windows&arch=$Arch&features=$features"
-    $file = Join-Path (Split-Path $PSCommandPath) "tools/caddy-$Arch.zip"
+    $relFile = "tools/caddy-$Arch.zip"
+    $file = Join-Path (Split-Path $PSCommandPath) $relFile
 
-    Write-Output "  URL: $url"
+    Write-Output "   URL: $url"
     Invoke-WebRequest -Uri $url -OutFile $file
-    Write-Output "  MD5: $((Get-FileHash $file -Algorithm MD5).Hash.ToLower())"
+    Write-Output "  FILE: $relFile"
+    Write-Output "   MD5: $((Get-FileHash $file -Algorithm MD5).Hash.ToLower())"
 }
 
 function Get-CaddyReleaseNotes {
