@@ -1,6 +1,30 @@
 ﻿Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 
+function Get-CaddyDownloadUrl {
+    param(
+        [string]$Arch
+    )
+    
+    $features = [string]::Join(",", @("cors"; "git"; "hugo"; "ipfilter"; "jsonp"; "mailout"; "search"))
+    return "https://caddyserver.com/download/build?os=windows&arch=$Arch&features=$features"
+}
+
+function Get-CaddyDownloadTarget {
+    param(
+        [string]$Arch,
+        [switch]$Relative
+    )
+    
+    $rel = "tools/caddy-$Arch.zip"
+    if ($Relative) {
+        return $rel
+    }
+    else {
+        return Join-Path (Split-Path $PSCommandPath) $rel 
+    }
+}
+
 function Update-NuSpec {
     param(
         [string]$Path,
@@ -25,10 +49,9 @@ function Get-Caddy {
         [string]$Arch
     )
 
-    $features = [string]::Join(",", @("cors"; "git"; "hugo"; "ipfilter"; "jsonp"; "mailout"; "search"))
-    $url = "https://caddyserver.com/download/build?os=windows&arch=$Arch&features=$features"
-    $relFile = "tools/caddy-$Arch.zip"
-    $file = Join-Path (Split-Path $PSCommandPath) $relFile
+    $relFile = Get-CaddyDownloadTarget $Arch -Relative
+    $file = Get-CaddyDownloadTarget $Arch
+    $url = Get-CaddyDownloadUrl $Arch
 
     Write-Output "   URL: $url"
     Invoke-WebRequest -Uri $url -OutFile $file
@@ -45,6 +68,36 @@ function Get-CaddyReleaseNotes {
     return $resp.body.Trim()
 }
 
+function New-VerificationFile {
+    param(
+        [string]$CaddyVersion
+    )
+    
+    $txt = @"
+VERIFICATION.TXT is intended to assist the Chocolatey moderators and community
+in verifying that this package's contents are trustworthy.
+
+The following package files can be verified by comparing a hash of their content
+to hash of the file available at the corresponding download URL.
+
+These download URLs are what we assert to be the trusted source for those files.
+
+    $(Get-CaddyDownloadTarget 'amd64' -Relative): $(Get-CaddyDownloadUrl 'amd64')
+    $(Get-CaddyDownloadTarget '386' -Relative): $(Get-CaddyDownloadUrl '386')
+
+CAVEAT!
+
+Caddy's download server only serves the most recent release. As such, the URLs
+above always point to the most recent Caddy release which may not match this
+package version.
+
+This package is built for Caddy version: $CaddyVersion.
+"@
+
+    $outfile = "tools/verification.txt"
+    $txt | Out-File $outfile -Encoding utf8
+}
+
 $resp = Invoke-WebRequest -Uri 'https://caddyserver.com/download'
 if (-not($resp -match 'Version\s+(\d+\.\d+\.\d+)')) {
     throw 'Failed to find the version number.'
@@ -53,9 +106,12 @@ $version = $Matches[1]
 Write-Output "Caddy Version: $version"
 
 Write-Output "Downloading 32-bit..."
-Get-Caddy 386
+Get-Caddy '386'
 Write-Output "Downloading 64-bit..."
-Get-Caddy amd64
+Get-Caddy 'amd64'
+
+Write-Output "Writing verification.txt..."
+New-VerificationFile -CaddyVersion $version
 
 Write-Output "Fetching release notes..."
 $releaseNotes = Get-CaddyReleaseNotes $version
