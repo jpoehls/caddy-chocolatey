@@ -6,7 +6,7 @@ function Get-CaddyDownloadUrl {
         [string]$Arch
     )
     
-    $features = [string]::Join(",", @("cors"; "git"; "hugo"; "ipfilter"; "jsonp"; "mailout"; "search"))
+    $features = [string]::Join(",", @("cors"; "git"; "hugo"; "ipfilter"; "jsonp"; "mailout"; "search", "prometheus"))
     return "https://caddyserver.com/download/build?os=windows&arch=$Arch&features=$features"
 }
 

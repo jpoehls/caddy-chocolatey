@@ -1,28 +1,39 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <package xmlns="http://schemas.microsoft.com/packaging/2015/06/nuspec.xsd">
-    <metadata>
-        <id>caddy</id>
-        <title>Caddy</title>
-        <version>0.8.2</version>
-        <authors>Matt Holt</authors>
-        <owners>Joshua Poehls</owners>
-        <summary>Caddy is a fast, cross-platform HTTP/2 web server with automatic HTTPS.</summary>
-        <description>Caddy is a lightweight, general-purpose web server for Windows, Mac, Linux, BSD and Android. It is a capable alternative to other popular and easy to use web servers. ([@caddyserver](https://twitter.com/caddyserver) on Twitter)
+  <metadata>
+    <id>caddy</id>
+    <title>Caddy</title>
+    <version>0.8.2</version>
+    <authors>Matt Holt</authors>
+    <owners>Joshua Poehls</owners>
+    <summary>Caddy is a fast, cross-platform HTTP/2 web server with automatic HTTPS.</summary>
+    <description>Caddy is a lightweight, general-purpose web server for Windows, Mac, Linux, BSD and Android. It is a capable alternative to other popular and easy to use web servers. ([@caddyserver](https://twitter.com/caddyserver) on Twitter)
 
 The most notable features are HTTP/2, [Let's Encrypt](https://letsencrypt.org/) support, Virtual Hosts, TLS + SNI, and easy configuration with a [Caddyfile](https://caddyserver.com/docs/caddyfile). In development, you usually put one Caddyfile with each site. In production, Caddy serves HTTPS by default and manages all cryptographic assets for you.
 
-[User Guide](https://caddyserver.com/docs)</description>
-		<iconUrl>https://cdn.rawgit.com/jpoehls/caddy-chocolatey/master/caddy-icon.md</iconUrl>
-        <projectUrl>https://caddyserver.com/</projectUrl>
-        <projectSourceUrl>https://github.com/mholt/caddy</projectSourceUrl>
-        <packageSourceUrl>https://github.com/jpoehls/caddy-chocolatey</packageSourceUrl>
-        <licenseUrl>https://github.com/mholt/caddy/blob/master/LICENSE.txt</licenseUrl>
-        <docsUrl>https://caddyserver.com/docs</docsUrl>
-        <bugTrackerUrl>https://github.com/mholt/caddy/issues</bugTrackerUrl>
-        <tags>caddy web server</tags>
-        <copyright />
-        <requireLicenseAcceptance>false</requireLicenseAcceptance>
-        <releaseNotes>With 0.8.2, Caddy gets On-Demand TLS, which means it can obtain certificates during TLS handshakes; it does not need to know all the names when you start the server. Caddy is now built on Go 1.6, meaning faster crypto and highly-optimized garbage collection. Caddy no longer restarts on its own; only if signaled with USR1 (all certificate maintenance is done in-process now). We've also added support for SHA384 cipher suites and the ability to load certificates in bulk from a folder.
+[User Guide](https://caddyserver.com/docs)
+
+**Add-ons Included **
+
+- [cors](https://caddyserver.com/docs/cors) - Enable Cross Origin Resource Sharing.
+- [git](https://caddyserver.com/docs/git) - Deploy your site with git push.
+- [hugo](https://caddyserver.com/docs/hugo) - Powerful and easy static site generator with admin interface.
+- [ipfilter](https://caddyserver.com/docs/ipfilter) - Block or allow clients based on IP origin.
+- [jsonp](https://caddyserver.com/docs/jsonp) - Wrap regular JSON responses as JSONP.
+- [mailout](https://caddyserver.com/docs/mailout) - SMTP client with REST API. Send emails with optional PGP encryption.
+- [prometheus](https://caddyserver.com/docs/prometheus) - Prometheus metrics.
+- [search](https://caddyserver.com/docs/search) - Activates a site search engine.</description>
+    <iconUrl>https://cdn.rawgit.com/jpoehls/caddy-chocolatey/master/caddy-icon.md</iconUrl>
+    <projectUrl>https://caddyserver.com/</projectUrl>
+    <projectSourceUrl>https://github.com/mholt/caddy</projectSourceUrl>
+    <packageSourceUrl>https://github.com/jpoehls/caddy-chocolatey</packageSourceUrl>
+    <licenseUrl>https://github.com/mholt/caddy/blob/master/LICENSE.txt</licenseUrl>
+    <docsUrl>https://caddyserver.com/docs</docsUrl>
+    <bugTrackerUrl>https://github.com/mholt/caddy/issues</bugTrackerUrl>
+    <tags>caddy web server</tags>
+    <copyright />
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <releaseNotes>With 0.8.2, Caddy gets On-Demand TLS, which means it can obtain certificates during TLS handshakes; it does not need to know all the names when you start the server. Caddy is now built on Go 1.6, meaning faster crypto and highly-optimized garbage collection. Caddy no longer restarts on its own; only if signaled with USR1 (all certificate maintenance is done in-process now). We've also added support for SHA384 cipher suites and the ability to load certificates in bulk from a folder.
 
 On-Demand TLS is currently under tight rate limits to mitigate abuse. When you enable it, you have to set a hard limit of how many certificates it is allowed to issue using the `max_certs` property of the `tls` directive.
 
@@ -51,8 +62,8 @@ All notable changes:
 - tls: Load certificates from directory
 - tls: Add SHA384 cipher suites
 - Multiple bug fixes and internal changes</releaseNotes>
-    </metadata>
-    <files>
-        <file src="tools\**" target="tools" />
-    </files>
+  </metadata>
+  <files>
+    <file src="tools\**" target="tools" />
+  </files>
 </package>
