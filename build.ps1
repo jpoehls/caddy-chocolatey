@@ -133,3 +133,5 @@ Update-NuSpec -Path $nuspec -Version $version -ReleaseNotes $releaseNotes
 
 Write-Output "Packing..."
 choco pack $nuspec
+
+Write-Output "Done. Run this to publish:`n`n    choco push caddy.$version.nupkg`n"
