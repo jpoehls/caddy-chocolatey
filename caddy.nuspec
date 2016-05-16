@@ -3,7 +3,7 @@
   <metadata>
     <id>caddy</id>
     <title>Caddy</title>
-    <version>0.8.2</version>
+    <version>0.8.3</version>
     <authors>Matt Holt</authors>
     <owners>Joshua Poehls</owners>
     <summary>Caddy is a fast, cross-platform HTTP/2 web server with automatic HTTPS.</summary>
@@ -20,9 +20,12 @@ The most notable features are HTTP/2, [Let's Encrypt](https://letsencrypt.org/) 
 - [hugo](https://caddyserver.com/docs/hugo) - Powerful and easy static site generator with admin interface.
 - [ipfilter](https://caddyserver.com/docs/ipfilter) - Block or allow clients based on IP origin.
 - [jsonp](https://caddyserver.com/docs/jsonp) - Wrap regular JSON responses as JSONP.
+- [jwt](https://caddyserver.com/docs/jwt) - JWT authorization
 - [mailout](https://caddyserver.com/docs/mailout) - SMTP client with REST API. Send emails with optional PGP encryption.
 - [prometheus](https://caddyserver.com/docs/prometheus) - Prometheus metrics.
-- [search](https://caddyserver.com/docs/search) - Activates a site search engine.</description>
+- [realip](https://caddyserver.com/docs/realip) - Restore original IP when behind a proxy.
+- [search](https://caddyserver.com/docs/search) - Activates a site search engine.
+- [upload](https://caddyserver.com/docs/upload) - Upload files</description>
     <iconUrl>https://cdn.rawgit.com/jpoehls/caddy-chocolatey/master/caddy-icon.md</iconUrl>
     <projectUrl>https://caddyserver.com/</projectUrl>
     <projectSourceUrl>https://github.com/mholt/caddy</projectSourceUrl>
@@ -33,35 +36,27 @@ The most notable features are HTTP/2, [Let's Encrypt](https://letsencrypt.org/) 
     <tags>caddy web server</tags>
     <copyright />
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
-    <releaseNotes>With 0.8.2, Caddy gets On-Demand TLS, which means it can obtain certificates during TLS handshakes; it does not need to know all the names when you start the server. Caddy is now built on Go 1.6, meaning faster crypto and highly-optimized garbage collection. Caddy no longer restarts on its own; only if signaled with USR1 (all certificate maintenance is done in-process now). We've also added support for SHA384 cipher suites and the ability to load certificates in bulk from a folder.
+    <releaseNotes>Caddy 0.8.3 introduces TLS session ticket key rotation and a number of bug fixes and other internal improvements. There are also two new middlewares: expvar and pprof, mostly useful for debugging purposes.
 
-On-Demand TLS is currently under tight rate limits to mitigate abuse. When you enable it, you have to set a hard limit of how many certificates it is allowed to issue using the `max_certs` property of the `tls` directive.
+All users are encouraged to upgrade as soon as possible with proper testing. Thank you to all who made this possible!
 
-- At most one certificate challenge happens at a time.
-- After 10 certificates are successfully obtained, new certificate challenges will not happen until 10 minutes after the last successful challenge.
-- A name that fails a challenge will not be allowed to be attempted again for 5 minutes.
+Change list:
 
-This feature -- as well as all automatic HTTPS, even at startup -- is not guaranteed to be supported in the future if ACME CAs are not able to issue certificates in a reasonable timeframe (quicker than 10 minutes). Please speak with your CA if this is of interest to you.
-
-See the [relevant](https://caddyserver.com/docs/automatic-https#on-demand) [documentation](https://caddyserver.com/docs/tls) and [release announcement](https://caddyserver.com/blog/caddy-0_8_2-released) for more details.
-
-All notable changes:
-
-- On-demand TLS can obtain certificates during handshakes
-- Built with Go 1.6
-- Process log (-log) is rotated when it gets large
-- Managed certificates get renewed 30 days early instead of just 14
-- fastcgi: Allow scheme prefix before address
-- markdown: Support for definition lists
-- proxy: Allow proxy to insecure HTTPS backends
-- proxy: Support proxy to unix socket
-- rewrite: Status code can be 2xx or 4xx
-- templates: New .Markdown action to interpret included file as Markdown
-- templates: .Truncate now truncates from end of string when length is negative
-- tls: Set hard limit for certificates obtained with on-demand TLS
-- tls: Load certificates from directory
-- tls: Add SHA384 cipher suites
-- Multiple bug fixes and internal changes</releaseNotes>
+- Built with Go 1.6.2
+- New pprof middleware for exposing process profiling endpoints
+- New expvar middleware for exposing memory/GC performance
+- New -restart option to force in-process restarts on Unix systems
+- Only fail to start if managed certificate is expired (issue #642)
+- Toggle case-sensitive path matching with environment variable
+- File server now adds ETag header for static files
+- browse: Replace .LinkedPath action with .BreadcrumbMap
+- fastcgi: New except clause to exclude paths
+- proxy: New max_conns setting to limit max connections per upstream
+- proxy: New replaceable value for name of upstream host
+- templates: New utility actions for dealing with strings
+- tls: Customize certificate key with key_type (+ECC)
+- tls: Session ticket keys are now rotated
+- Many other minor internal improvements and bug fixes</releaseNotes>
   </metadata>
   <files>
     <file src="tools\**" target="tools" />
