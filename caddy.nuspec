@@ -3,7 +3,7 @@
   <metadata>
     <id>caddy</id>
     <title>Caddy</title>
-    <version>0.8.3</version>
+    <version>0.9.5</version>
     <authors>Matt Holt</authors>
     <owners>Joshua Poehls</owners>
     <summary>Caddy is a fast, cross-platform HTTP/2 web server with automatic HTTPS.</summary>
@@ -13,19 +13,47 @@ The most notable features are HTTP/2, [Let's Encrypt](https://letsencrypt.org/) 
 
 [User Guide](https://caddyserver.com/docs)
 
-**Add-ons Included **
+**Server Types**
 
-- [cors](https://caddyserver.com/docs/cors) - Enable Cross Origin Resource Sharing.
-- [git](https://caddyserver.com/docs/git) - Deploy your site with git push.
-- [hugo](https://caddyserver.com/docs/hugo) - Powerful and easy static site generator with admin interface.
-- [ipfilter](https://caddyserver.com/docs/ipfilter) - Block or allow clients based on IP origin.
-- [jsonp](https://caddyserver.com/docs/jsonp) - Wrap regular JSON responses as JSONP.
-- [jwt](https://caddyserver.com/docs/jwt) - JWT authorization
-- [mailout](https://caddyserver.com/docs/mailout) - SMTP client with REST API. Send emails with optional PGP encryption.
-- [prometheus](https://caddyserver.com/docs/prometheus) - Prometheus metrics.
-- [realip](https://caddyserver.com/docs/realip) - Restore original IP when behind a proxy.
-- [search](https://caddyserver.com/docs/search) - Activates a site search engine.
-- [upload](https://caddyserver.com/docs/upload) - Upload files</description>
+- DNS - DNS server core (see https://coredns.io)
+- HTTP - HTTP server core; everything most sites need
+
+**Directives/Middleware**
+
+- [awslambda](https://caddyserver.com/docs/awslambda) - Gateways requests to AWS Lambda functions
+- [cors](https://caddyserver.com/docs/cors) - Easily configure Cross-Origin Resource Sharing
+- [expires](https://caddyserver.com/docs/expires) - Add expiration headers to assets
+- [filemanager](https://caddyserver.com/docs/filemanager) - Manage files on your server with a GUI
+- [filter](https://caddyserver.com/docs/filter) - Filter response body contents
+- [git](https://caddyserver.com/docs/git) - Deploy your site with git push
+- [hugo](https://caddyserver.com/docs/hugo) - Static site generator with admin interface
+- [ipfilter](https://caddyserver.com/docs/ipfilter) - Block or allow clients based on IP origin
+- [jsonp](https://caddyserver.com/docs/jsonp) - Wrap JSON responses as JSONP
+- [jwt](https://caddyserver.com/docs/jwt) - Authorization with JSON Web Tokens
+- [locale](https://caddyserver.com/docs/locale) - Detect locale of client
+- [mailout](https://caddyserver.com/docs/mailout) - SMTP client with REST API and PGP encryption
+- [minify](https://caddyserver.com/docs/minify) - Minify static assets on-the-fly
+- [multipass](https://caddyserver.com/docs/multipass) - Authorization by email
+- [prometheus](https://caddyserver.com/docs/prometheus) - Prometheus metrics integration
+- [ratelimit](https://caddyserver.com/docs/ratelimit) - Limit rate of requests
+- [realip](https://caddyserver.com/docs/realip) - Restore original IP when behind a proxy
+- [search](https://caddyserver.com/docs/search) - Site search engine
+- [upload](https://caddyserver.com/docs/upload) - Upload files
+
+**DNS Providers**
+
+- cloudflare
+- digitalocean
+- dnsimple
+- dyn
+- gandi
+- googlecloud
+- linode
+- namecheap
+- ovh
+- rfc2136
+- route53
+- vultr</description>
     <iconUrl>https://cdn.rawgit.com/jpoehls/caddy-chocolatey/master/caddy-icon.md</iconUrl>
     <projectUrl>https://caddyserver.com/</projectUrl>
     <projectSourceUrl>https://github.com/mholt/caddy</projectSourceUrl>
@@ -36,27 +64,64 @@ The most notable features are HTTP/2, [Let's Encrypt](https://letsencrypt.org/) 
     <tags>caddy web server</tags>
     <copyright />
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
-    <releaseNotes>Caddy 0.8.3 introduces TLS session ticket key rotation and a number of bug fixes and other internal improvements. There are also two new middlewares: expvar and pprof, mostly useful for debugging purposes.
+    <releaseNotes>Caddy 0.9.5 contains several critical fixes and we recommend applying the update right away. **Please read these notes first, though!**
 
-All users are encouraged to upgrade as soon as possible with proper testing. Thank you to all who made this possible!
+Thank you to the collaborators and contributors for all your hard work (especially @tw4452852 and @lhecker - among many others, see the commit history) while I've been busy working on the new website and build infrastructure!
 
-Change list:
+## [HTTP Timeouts](https://blog.cloudflare.com/exposing-go-on-the-internet/) Enabled by Default
 
-- Built with Go 1.6.2
-- New pprof middleware for exposing process profiling endpoints
-- New expvar middleware for exposing memory/GC performance
-- New -restart option to force in-process restarts on Unix systems
-- Only fail to start if managed certificate is expired (issue #642)
-- Toggle case-sensitive path matching with environment variable
-- File server now adds ETag header for static files
-- browse: Replace .LinkedPath action with .BreadcrumbMap
-- fastcgi: New except clause to exclude paths
-- proxy: New max_conns setting to limit max connections per upstream
-- proxy: New replaceable value for name of upstream host
-- templates: New utility actions for dealing with strings
-- tls: Customize certificate key with key_type (+ECC)
-- tls: Session ticket keys are now rotated
-- Many other minor internal improvements and bug fixes</releaseNotes>
+Caddy aims to be secure right out of the box. In order to prevent faulty or malicious clients from seeping resources away with [slowloris](https://blog.qualys.com/tag/slow-http-attack) behavior, Caddy now enables timeouts by default. In general, this will not affect most users. However, you may need to [raise or disable these timeouts](https://caddyserver.com/docs/timeouts) depending on your legitimate visitors' needs and your server's configuration. If your visitors have legitimately slow networks or you need to hold requests for a long time (e.g. long polling or proxying long requests to a trusted backend), consider raising these timeouts.
+
+Default timeout values:
+
+- **read:** 10s (time spent reading request headers and body)
+- **header:** 10s (time spent reading just headers; not used until Go 1.8 is released)
+- **write:** 20s (starts at reading request body, ends when finished writing response body)
+- **idle:** 2m (time to hold connection between requests; not used until Go 1.8 is released)
+
+As you can see, a couple of the timeout values will begin functioning when Caddy is built on Go 1.8, expected within about a month. Go ahead and set them now; they will just start working when supported. See the timeouts [pull request](https://github.com/mholt/caddy/pull/1368) and [docs](https://caddyserver.com/docs/timeouts).
+
+## Critical Uptime/Connectivity Fix
+
+This is a little embarrassing, but if conditions were just right, Caddy would initiate a certificate renewal using the TLS-SNI-01 challenge, which would cause a deadlock. Subsequent TLS handshakes would block forever until the server stopped responding to requests. It took months to find and fix this because it only happened when very specific conditions are met: certificate needs renewal (once every 60 days), TLS-SNI-01 challenge is chosen (by roll of dice), renewal is trigged from background maintenance goroutine (not on-demand or during startup), and Let's Encrypt did not have a cached authz for that domain. [Now it's fixed.](https://github.com/mholt/caddy/commit/0e34c7c97025e1d3570de291b603aed334377dd5)
+
+A _huge_ thanks to Bradley Falzon (@bradleyfalzon), Miek Gieben (@miekg), and  Sebestian Erhart (@xenolf) for spending considerable time to help me debug this. It wasn't possible without their hours of help.
+
+## Proxy performance improvements
+
+We continue to iterate on Caddy's `proxy` functionality. Caddy was never designed to be a reverse proxy except as a very simple one, just to say that it can do it. But it turns out that `proxy` is one of the most popular directives. So with this release, [we've improved](https://github.com/mholt/caddy/pull/1314) on a recent regression that buffered request bodies. Proxy configurations with a single upstream or with try_duration unset (0) will be much faster and use less memory. We're still improving upon failure conditions and retry behavior; we had a rich discussion in #1314 about it. You should also see better HTTPS+websockets support.
+
+Also, the deprecated `proxy_header` subdirective is no longer accepted; use `header_upstream` instead.
+
+## Minor security fixes in browse
+
+The `browse` middleware was improved a bit. First, a filter textbox was added to instantly filter the listings by file name. We also now sanitize the file names and links in case, for some reason, you are not already doing that with untrusted files. I want to thank Kevin Froman (@beardog108) for the responsible reporting of this as a precaution. I also went ahead and made sure the browse directive will hide the active Caddyfile if it is within your site's root, no matter the current working directory.
+
+
+## Other things
+
+There's a new `-validate` flag to load and parse your Caddyfile, then terminate. It will tell you if the Caddyfile is syntactically valid or not. There's also new placeholders: `{when_iso}` gives you the UTC timestamp in ISO 8601 format, and `{rewrite_path}` gives you the URI path after a rewrite (`{path}` gives the path as it originally was on the request before any rewrites).
+
+Full change list:
+
+- New -validate flag to only check a Caddyfile, then exit
+- New {when_iso} placeholder for timestamp ISO 8601 in UTC
+- New {rewrite_path} and {rewrite_path_escaped} placeholders
+- New 'timeouts' directive to configure or disable HTTP timeouts
+- HTTP-level timeouts enabled by default
+- browse: Added textbox to filter listing in default template
+- browse: Sanitize file names and links in default template
+- browse: Ensure active Caddyfile is hidden regardless of cwd
+- fastcgi: New 'root' property, mainly for use with containers
+- markdown: Apply some front matter fields as &lt;meta&gt; tags
+- proxy: Fixed HTTP/2 upstream to backend; honors -http CLI flag
+- proxy: Fixed websockets over HTTPS
+- proxy: Reduced memory usage and improved performance
+- proxy: Added support for HTTP trailers
+- tls: Fixed deadlock that affected some background renewals
+- Several other smaller bugs squashed and improvements made
+
+Thanks for continuing to use Caddy!</releaseNotes>
   </metadata>
   <files>
     <file src="tools\**" target="tools" />

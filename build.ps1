@@ -1,24 +1,25 @@
 ﻿Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
+[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+
+function Get-CaddyFeatures {
+    $resp = Invoke-WebRequest -Uri https://caddyserver.com/features.json
+    $json = $resp.Content | ConvertFrom-Json
+    return $json | Select-Object type, name, description, required, @{ Name="docsUrl"; Expression={
+        if ($_.docs) {
+            "https://caddyserver.com$($_.docs)"
+        } else { $null }
+    } } | Sort-Object type, name
+}
 
 function Get-CaddyDownloadUrl {
     param(
-        [string]$Arch
+        [string]$Arch,
+        [string[]]$Features
     )
-    
-    $features = [string]::Join(",", @(
-        "cors";
-        "git";
-        "hugo";
-        "ipfilter";
-        "jsonp";
-        "jwt";
-        "mailout";
-        "prometheus";
-        "realip";
-        "search";
-        "upload"))
-    return "https://caddyserver.com/download/build?os=windows&arch=$Arch&features=$features"
+
+    $featuresStr = [string]::Join(",", $Features)
+    return "https://caddyserver.com/download/build?os=windows&arch=$Arch&features=$featuresStr"
 }
 
 function Get-CaddyDownloadTarget {
@@ -40,7 +41,8 @@ function Update-NuSpec {
     param(
         [string]$Path,
         [string]$Version,
-        [string]$ReleaseNotes
+        [string]$ReleaseNotes,
+        [string]$Description
     )
 
     $ns = @{ nuspec = 'http://schemas.microsoft.com/packaging/2015/06/nuspec.xsd' }
@@ -52,17 +54,21 @@ function Update-NuSpec {
     $el = $xml | Select-Xml -XPath '/nuspec:package/nuspec:metadata/nuspec:releaseNotes' -Namespace $ns
     $el.Node.InnerText = $ReleaseNotes
 
+    $el = $xml | Select-Xml -XPath '/nuspec:package/nuspec:metadata/nuspec:description' -Namespace $ns
+    $el.Node.InnerText = $Description
+
     $xml.Save($Path)
 }
 
 function Get-Caddy {
     param(
-        [string]$Arch
+        [string]$Arch,
+        [string[]]$Features
     )
 
     $relFile = Get-CaddyDownloadTarget $Arch -Relative
     $file = Get-CaddyDownloadTarget $Arch
-    $url = Get-CaddyDownloadUrl $Arch
+    $url = Get-CaddyDownloadUrl -Arch $Arch -Features $Features
 
     Write-Output "   URL: $url"
     Invoke-WebRequest -Uri $url -OutFile $file
@@ -75,13 +81,14 @@ function Get-CaddyReleaseNotes {
         [string]$Version
     )
 
-    $resp = Invoke-WebRequest "https://api.github.com/repos/mholt/caddy/releases/tags/v$Version" | select -ExpandProperty Content | ConvertFrom-Json
+    $resp = Invoke-WebRequest "https://api.github.com/repos/mholt/caddy/releases/tags/v$Version" | Select-Object -ExpandProperty Content | ConvertFrom-Json
     return $resp.body.Trim()
 }
 
 function New-VerificationFile {
     param(
-        [string]$CaddyVersion
+        [string]$CaddyVersion,
+        [string[]]$Features
     )
     
     $txt = @"
@@ -93,8 +100,8 @@ to hash of the file available at the corresponding download URL.
 
 These download URLs are what we assert to be the trusted source for those files.
 
-    $(Get-CaddyDownloadTarget 'amd64' -Relative): $(Get-CaddyDownloadUrl 'amd64')
-    $(Get-CaddyDownloadTarget '386' -Relative): $(Get-CaddyDownloadUrl '386')
+    $(Get-CaddyDownloadTarget 'amd64' -Relative): $(Get-CaddyDownloadUrl -Arch 'amd64' -Features $Features)
+    $(Get-CaddyDownloadTarget '386' -Relative): $(Get-CaddyDownloadUrl -Arch '386' -Features $Features)
 
 CAVEAT!
 
@@ -109,6 +116,23 @@ This package is built for Caddy version: $CaddyVersion.
     $txt | Out-File $outfile -Encoding utf8
 }
 
+function Get-FeatureDescriptionLineItem {
+    param(
+        $Feature
+    )
+
+    $line = ""
+    if ($_.docsUrl) {
+        $line = "$line`n- [$($_.name)]($($_.docsUrl))"
+    } else {
+        $line = "$line`n- $($_.name)"
+    }
+    if ($_.description) {
+        $line = "$line - $($_.description)"
+    }
+    return $line
+}
+
 $resp = Invoke-WebRequest -Uri 'https://caddyserver.com/download'
 if (-not($resp -match 'Version\s+(\d+\.\d+\.\d+)')) {
     throw 'Failed to find the version number.'
@@ -116,20 +140,42 @@ if (-not($resp -match 'Version\s+(\d+\.\d+\.\d+)')) {
 $version = $Matches[1]
 Write-Output "Caddy Version: $version"
 
+Write-Output "Fetching features..."
+$features = Get-CaddyFeatures
+[string[]]$optionalFeatures = $features | ? { -not($_.required) } | Select-Object -ExpandProperty name | sort
+
 Write-Output "Downloading 32-bit..."
-Get-Caddy '386'
+Get-Caddy '386' $optionalFeatures
 Write-Output "Downloading 64-bit..."
-Get-Caddy 'amd64'
+Get-Caddy 'amd64' $optionalFeatures
 
 Write-Output "Writing verification.txt..."
-New-VerificationFile -CaddyVersion $version
+New-VerificationFile -CaddyVersion $version -Features $optionalFeatures
 
 Write-Output "Fetching release notes..."
 $releaseNotes = Get-CaddyReleaseNotes $version
 
 Write-Output "Updating the NuSpec...."
+
+$desc =
+@"
+Caddy is a lightweight, general-purpose web server for Windows, Mac, Linux, BSD and Android. It is a capable alternative to other popular and easy to use web servers. ([@caddyserver](https://twitter.com/caddyserver) on Twitter)
+
+The most notable features are HTTP/2, [Let's Encrypt](https://letsencrypt.org/) support, Virtual Hosts, TLS + SNI, and easy configuration with a [Caddyfile](https://caddyserver.com/docs/caddyfile). In development, you usually put one Caddyfile with each site. In production, Caddy serves HTTPS by default and manages all cryptographic assets for you.
+
+[User Guide](https://caddyserver.com/docs)
+
+**Server Types**
+
+"@
+$features | ? { $_.type -eq "server" } | sort name | % { $desc = "$desc$(Get-FeatureDescriptionLineItem $_)" }
+$desc = "$desc`n`n**Directives/Middleware**`n"
+$features | ? { $_.type -eq "directive" } | sort name | % { $desc = "$desc$(Get-FeatureDescriptionLineItem $_)" }
+$desc = "$desc`n`n**DNS Providers**`n"
+$features | ? { $_.type -eq "dns_provider" } | sort name | % { $desc = "$desc$(Get-FeatureDescriptionLineItem $_)" }
+
 $nuspec = Join-Path (Split-Path $PSCommandPath) 'caddy.nuspec'
-Update-NuSpec -Path $nuspec -Version $version -ReleaseNotes $releaseNotes
+Update-NuSpec -Path $nuspec -Version $version -ReleaseNotes $releaseNotes -Description $desc
 
 Write-Output "Packing..."
 choco pack $nuspec
